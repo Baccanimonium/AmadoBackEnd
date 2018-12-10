@@ -19,13 +19,21 @@ const ProductsSchema = new Schema({
 		type: [String],
 		required: true,
 	},
+	colors: {
+		type: [String],
+		required: true,
+	},
 	quantity: {
 		type: Number,
 		required: true,
 	},
 	lastPurchase: {
 		type: Date,
-		default: Date.now
+		default: Date.now()
+	},
+	categoryId: {
+		type: Schema.Types.ObjectId,
+		ref: 'productCategories'
 	},
 	comments: [
 		{

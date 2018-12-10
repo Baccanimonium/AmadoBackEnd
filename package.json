@@ -18,7 +18,7 @@
     "graphql-tools": "^3.0.2",
     "graphql-upload": "^8.0.0",
     "jsonwebtoken": "^8.3.0",
-    "mongoose": "^5.2.6",
+    "mongoose": "^5.3.15",
     "shortid": "^2.2.13"
   },
   "devDependencies": {

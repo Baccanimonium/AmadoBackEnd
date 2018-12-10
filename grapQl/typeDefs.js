@@ -23,6 +23,7 @@ exports.typeDefs = gql`
         name: String!
         description: String!
         price: String!
+        categoryId: String!
         image: [String]!
         quantity: String!
         comments: [Comments]
@@ -37,10 +38,26 @@ exports.typeDefs = gql`
         token: String!
     } 
     
+    type Story {
+        id: ID!
+        author: Person!
+        title: String!
+    }
+    
+    type Person {
+        id: ID!
+		name: String!
+		stories: [Story]
+    }
+    
 	type Query {
         getCurrentUser: Users
         getUser: [Users]
         getCategories: [ProductCategories]
+        getProducts(_id: ID, categoryId: ID):[Products]
+        
+        getPerson(_id: ID!): Person
+        getStory(_id: ID!): Story
     }
     
     type Mutation {
@@ -59,12 +76,16 @@ exports.typeDefs = gql`
         ): ProductCategories
         
         addProducts(
-            categoryId: ID
+            categoryId: ID!
 	        name: String!
 	        description: String!
 	        price: String!
 	        image: [Upload]
+	        colors: [String!]!
 	        quantity: String!
         ):Products
+        
+        addPerson(name: String!):Person
+        addStory(author: ID!, title: String!):Story
     }
 `;

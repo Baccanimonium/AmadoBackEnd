@@ -1,24 +1,27 @@
 const shortid = require('shortid');
 const fs = require('fs');
 const path = require('path');
+const StoryModel = require('../models/Story');
+const getPathForStatic = require('../utils/getStaticPath');
 
+const storeUpload = async ({ stream, filePath }) => {
 
-const storeUpload = async ({ stream }) => {
-	const id = shortid.generate();
-
-	const writePath = path.resolve(__dirname, `../assets/img/${id}.jpg`);
+	const writePath = path.resolve(__dirname, `..${filePath}`);
 	const writeStream = fs.createWriteStream(writePath);
 	return new Promise((resolve, reject) => stream
 		.pipe(writeStream)
-		.on("finish", () => resolve({id, writePath}))
+		.on("finish", () => resolve({writePath}))
 		.on("error", reject)
 	);
 };
 const processUpload = async (upload) => {
 	const { stream, filename, mimetype, encoding } = await upload;
+	const [ fileExt ] = filename.split('.').reverse();
+	const id = shortid.generate();
 
-	const { id } = await storeUpload({stream, filename});
-	return id;
+	const filePath = getPathForStatic({ fileExt, fileName: id });
+	await storeUpload({stream, filePath});
+	return filePath;
 };
 exports.resolvers = {
 	Query: {
@@ -34,7 +37,36 @@ exports.resolvers = {
 		},
 
 		getCategories: async (root, args, { ProductCategories }) => {
-			return await ProductCategories.find().populate({ path: 'products', model: 'products'});
+			return await ProductCategories.find();
+		},
+
+		getProducts: async (root, { categoryId }, { Products, ProductCategories }) => {
+			const { id } = await ProductCategories.findOne({name: categoryId }).exec();
+			return await Products.find({ categoryId: id });
+		},
+
+		getPerson: async (root, { _id }, { Person }) => {
+			return await Person.findOne({ _id });
+		},
+		getStory: async (root, { _id }, { Story }) => {
+			return await Story.findOne({ _id });
+		},
+	},
+	Users: {
+		avatar (root, args, ...a) {
+			console.log(root, args, a)
+			return 'Hello World';
+		}
+	},
+	Person: {
+		async stories ({_id}) {
+			return await StoryModel.find({ author : _id });
+		}
+	},
+	Story: {
+		async author (root) {
+			const { author } = await root.populate('author').execPopulate();
+			return author;
 		}
 	},
 	Mutation: {
@@ -51,21 +83,16 @@ exports.resolvers = {
 				name
 			}).save();
 		},
-		addProducts: async (root, { categoryId, name, description, price, image, quantity }, { Products, ProductCategories }) => {
+		addProducts: async (root, { image, ...args }, { Products, }) => {
 			let finalResult = [];
 			const images = Object.values(image).map(async (file) => await processUpload(file));
 			for (const result of images) {
 				finalResult.push(await result);
 			}
-			const newProduct = await new Products({
-				name,
-				description,
-				price,
+			return await new Products({
 				image: finalResult,
-				quantity,
+				...args
 			}).save();
-			await ProductCategories.findByIdAndUpdate({_id: categoryId}, {$push: {products: newProduct._id}});
-			return newProduct;
 		},
 
 		singleUpload: async (parent, { file }) => {
@@ -78,6 +105,12 @@ exports.resolvers = {
 			// const id = await recordFile( … )
 
 			return await processUpload(file);
+		},
+		addPerson: async (root, { name }, { Person }) => {
+			return await new Person({name}).save();
+		},
+		addStory: async (root, { title, author }, { Story }) => {
+			return await new Story({title, author}).save();
 		}
 	}
 };

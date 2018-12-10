@@ -22,6 +22,8 @@ const app = express();
 const User = require('./models/User');
 const ProductCategories = require('./models/ProductCategories');
 const Products = require('./models/Products');
+const Story = require('./models/Story');
+const Person = require('./models/Person');
 
 // routes
 const indexRouter = require('./routes/index');
@@ -36,7 +38,9 @@ const apollo = new ApolloServer({
 	context: ({ req }) => ({
 		User,
 		ProductCategories,
-		Products
+		Products,
+		Person,
+		Story
 	})
 });
 apollo.applyMiddleware({app});
@@ -64,7 +68,7 @@ mongoose
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
-app.use('/assets', express.static(path.join(__dirname, 'assets')));
+app.use('/static', express.static(path.join(__dirname, 'static')));
 
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
