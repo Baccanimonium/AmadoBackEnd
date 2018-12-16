@@ -22,9 +22,10 @@ exports.typeDefs = gql`
         id: ID
         name: String!
         description: String!
-        price: String!
+        price: Int!
         categoryId: String!
         image: [String]!
+        colors: [String]!
         quantity: String!
         comments: [Comments]
     }
@@ -54,7 +55,20 @@ exports.typeDefs = gql`
         getCurrentUser: Users
         getUser: [Users]
         getCategories: [ProductCategories]
-        getProducts(_id: ID, categoryId: ID):[Products]
+        
+        getProducts(
+            _id: [ID],
+	        categoryId: ID,
+	        skip: Int, limit: Int,
+	        colors: [String],
+	        brand: [String],
+	        price: [Int],
+	        lastPurchase: String,
+        ):[Products]
+        
+        getProduct(id: ID!): Products
+        
+        searchProducts(name: String): [Products]
         
         getPerson(_id: ID!): Person
         getStory(_id: ID!): Story

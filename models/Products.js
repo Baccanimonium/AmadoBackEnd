@@ -12,7 +12,7 @@ const ProductsSchema = new Schema({
 		required: true,
 	},
 	price: {
-		type: String,
+		type: Number,
 		required: true,
 	},
 	image: {
@@ -25,6 +25,10 @@ const ProductsSchema = new Schema({
 	},
 	quantity: {
 		type: Number,
+		required: true,
+	},
+	brand: {
+		type: Array,
 		required: true,
 	},
 	lastPurchase: {
@@ -46,4 +50,11 @@ const ProductsSchema = new Schema({
 	]
 });
 
+// ProductsSchema.index({ name: 'text' });
+// ProductsSchema.index({
+// 	"$**": "text",
+// });
+ProductsSchema.index({
+	name: 'text',
+}, { weights: {name: 2 } });
 module.exports = mongoose.model('products', ProductsSchema);

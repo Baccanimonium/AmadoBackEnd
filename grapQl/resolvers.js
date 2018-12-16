@@ -40,9 +40,43 @@ exports.resolvers = {
 			return await ProductCategories.find();
 		},
 
-		getProducts: async (root, { categoryId }, { Products, ProductCategories }) => {
-			const { id } = await ProductCategories.findOne({name: categoryId }).exec();
-			return await Products.find({ categoryId: id });
+		getProducts: async (root, { categoryId, ...qParams }, { Products, ProductCategories }) => {
+			const { q, a} = Object.entries(qParams).reduce((accum, [key, val]) => {
+				switch (key) {
+					case 'price':
+						accum.q[key] = { $gte: val[0], $lte: val[1] };
+						break;
+
+					case 'skip':
+					case 'limit':
+						accum.a[key] = val;
+						break;
+					case 'lastPurchase':
+						accum.a.sort = { [key]: val };
+						break;
+					default:
+						accum.q[key] = { $in: val };
+				}
+				return accum
+			}, { q: {}, a: {}});
+			if (categoryId) {
+				const { id } = await ProductCategories.findOne({name: categoryId}).exec();
+				q.categoryId = id
+			}
+			return await Products.find(q, null, a).exec();
+		},
+
+		getProduct: async (root, { id }, { Products }) => {
+			return await Products.findById(id)
+		},
+
+		searchProducts: async (root, { name }, { Products }) => {
+			if (!name) return [];
+			return await Products.find(
+				{ $text: { $search: name, $caseSensitive: false } },
+				{ score: { $meta: "textScore" } },
+				{ limit: 10 }
+			).exec()
 		},
 
 		getPerson: async (root, { _id }, { Person }) => {
